@@ -2,5 +2,5 @@
 
 set -ex
 
-odin build . -debug examples/example1/example1
+odin build examples/example1 -debug
 
