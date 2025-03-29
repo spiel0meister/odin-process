@@ -8,8 +8,7 @@ import "core:strings"
 
 Proc_Handle :: windows.HANDLE
 
-// Copied from https://github.com/tsoding/nob.h/blob/39028aa9f017aafcb047a92d8a77b5bcf9d8dc84/nob.h#L854
-run :: proc(cmd: []string, allocator := context.temp_allocator) -> Proc_Error {
+start :: proc(cmd: []string, allocator := context.temp_allocator) -> (Proc, Proc_Handle) {
     start_info: windows.STARTUPINFOW
     start_info.cb = size_of(start_info)
     start_info.hStdError = windows.GetStdHandle(windows.STD_ERROR_HANDLE)
@@ -43,11 +42,19 @@ run :: proc(cmd: []string, allocator := context.temp_allocator) -> Proc_Error {
     )
 
     if !success {
-        return .Failed_To_Start
+        return {}, .Failed_To_Start
     }
 
     windows.CloseHandle(proc_info.hThread)
-    return wait(proc_info.hProcess)
+
+    new_proc := Proc{ handle = proc_info.hProcess }
+    return new_proc, nil
+}
+
+// Copied from https://github.com/tsoding/nob.h/blob/39028aa9f017aafcb047a92d8a77b5bcf9d8dc84/nob.h#L854
+run :: proc(cmd: []string, allocator := context.temp_allocator) -> Proc_Error {
+    new_proc := start(cmd, allocator) or_return
+    return wait(new_proc.handle)
 }
 
 // Copied from https://github.com/tsoding/nob.h/blob/39028aa9f017aafcb047a92d8a77b5bcf9d8dc84/nob.h#L1055
