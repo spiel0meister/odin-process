@@ -7,13 +7,17 @@ import "core:unicode/utf8"
 import "core:strings"
 
 Proc_Handle :: windows.HANDLE
+Proc_Pipe :: ^windows.HANDLE
 
-start :: proc(cmd: []string, allocator := context.temp_allocator) -> (Proc, Proc_Handle) {
+start :: proc(cmd: []string, redirect: Proc_Redirect_Flags = {}, allocator := context.temp_allocator) -> (Proc, Proc_Handle) {
+    new_proc := Proc{ handle = proc_info.hProcess }
+
     start_info: windows.STARTUPINFOW
     start_info.cb = size_of(start_info)
-    start_info.hStdError = windows.GetStdHandle(windows.STD_ERROR_HANDLE)
-    start_info.hStdOutput = windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
-    start_info.hStdInput = windows.GetStdHandle(windows.STD_INPUT_HANDLE)
+    start_info.hStdError = new_proc.out_pipe^ if redirect & { .Stderr } == { .Stderr } else windows.GetStdHandle(windows.STD_ERROR_HANDLE)
+    start_info.hStdOutput = new_proc.out_pipe^ if redirect & { .Stdout } == { .Stdout } else windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
+    start_info.hStdInput = new_proc.in_pipe^ if redirect & { .Stdin } == { .Stdin } else windows.GetStdHandle(windows.STD_INPUT_HANDLE)
+
     start_info.dwFlags |= windows.STARTF_USESTDHANDLES
 
     proc_info: windows.PROCESS_INFORMATION
@@ -46,8 +50,6 @@ start :: proc(cmd: []string, allocator := context.temp_allocator) -> (Proc, Proc
     }
 
     windows.CloseHandle(proc_info.hThread)
-
-    new_proc := Proc{ handle = proc_info.hProcess }
     return new_proc, nil
 }
 
