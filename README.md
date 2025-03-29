@@ -1,8 +1,10 @@
 # odin-process
 
-This library is meant to abstract away the tedious PROCESS of start a program in a new process and is meant to be cross platform.
+This library is meant to abstract away the tedious PROCESS of starting a program in a new process and is meant to be cross platform.
 
-# Example 1
+# Example
+
+## Example 1
 
 ```odin
 package example1
@@ -24,8 +26,6 @@ main :: proc() {
 # Todo
 
 - More examples
-- Ability to redirect *stdout*, *stderr*, *stdin*
-- Start process asynchronously
 
 # LICENSE
 
