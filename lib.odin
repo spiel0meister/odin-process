@@ -4,18 +4,17 @@ import "core:strings"
 
 Proc :: struct {
     handle: Proc_Handle,
-
     out_pipe: Proc_Pipe,
     in_pipe: Proc_Pipe,
 }
 
-Proc_Redirect :: enum {
+Proc_Redirect_Bits :: enum {
     Stdin,
     Stdout,
     Stderr,
 }
 
-Proc_Redirect_Flags :: bit_set[Proc_Redirect]
+Proc_Redirect :: bit_set[Proc_Redirect_Bits]
 
 Proc_Error :: enum {
     Failed_To_Start,
