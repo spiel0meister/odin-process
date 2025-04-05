@@ -60,7 +60,7 @@ run :: proc(cmd: []string, allocator := context.temp_allocator) -> Proc_Error {
 }
 
 // Copied from https://github.com/tsoding/nob.h/blob/39028aa9f017aafcb047a92d8a77b5bcf9d8dc84/nob.h#L1055
-wait :: proc(handle: Proc_Handle) -> Proc_Error {
+wait1 :: proc(using process: Proc) -> Proc_Error {
     result := windows.WaitForSingleObject(
                 handle,
                 windows.INFINITE
@@ -82,3 +82,12 @@ wait :: proc(handle: Proc_Handle) -> Proc_Error {
     return nil
 }
 
+wait_many :: proc(processes: []Proc) -> Proc_Error {
+    err := Proc_Error(nil)
+    for process in processes {
+        err = wait1(process) or_return
+    }
+    return err
+}
+
+wait :: proc{wait1, wait_many}

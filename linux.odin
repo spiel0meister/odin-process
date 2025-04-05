@@ -13,7 +13,7 @@ import os "core:os/os2"
 Proc_Handle :: linux.Pid
 Proc_Pipe :: [2]linux.Fd
 
-start :: proc(cmd: []string, redirect := Proc_Redirect_Flags{}, allocator := context.temp_allocator) -> (Proc, Proc_Error) {
+start :: proc(cmd: []string, redirect := Proc_Redirect{}, allocator := context.temp_allocator) -> (Proc, Proc_Error) {
     new_proc := Proc{}
 
     if .Stdout in redirect || .Stderr in redirect {
@@ -87,7 +87,7 @@ start :: proc(cmd: []string, redirect := Proc_Redirect_Flags{}, allocator := con
     return new_proc, nil
 }
 
-run :: proc(cmd: []string, redirect := Proc_Redirect_Flags{}, allocator := context.temp_allocator) -> Proc_Error {
+run :: proc(cmd: []string, redirect := Proc_Redirect{}, allocator := context.temp_allocator) -> Proc_Error {
     new_proc := start(cmd, redirect, allocator) or_return
 
     linux.close(new_proc.out_pipe[0])
@@ -96,9 +96,7 @@ run :: proc(cmd: []string, redirect := Proc_Redirect_Flags{}, allocator := conte
     return wait(new_proc)
 }
 
-wait :: proc(process: Proc) -> Proc_Error {
-    handle := process.handle
-
+wait1 :: proc(using process: Proc) -> Proc_Error {
     for {
         wstatus := u32(0)
         _, err := linux.waitpid(handle, &wstatus, {}, nil)
@@ -122,3 +120,13 @@ wait :: proc(process: Proc) -> Proc_Error {
 
     return nil
 }
+
+wait_many :: proc(processes: []Proc) -> Proc_Error {
+    err := Proc_Error(nil)
+    for process in processes {
+        err = wait1(process)
+    }
+    return err
+}
+
+wait :: proc{wait1, wait_many}
